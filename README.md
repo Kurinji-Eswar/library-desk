@@ -29,7 +29,6 @@
 - [Keyboard Shortcuts](#-keyboard-shortcuts)
 - [Deployment](#-deployment)
 - [Limitations & Future Scope](#-limitations--future-scope)
-- [Author & Owner](#-author--owner)
 - [License](#-license)
 
 ---
@@ -179,7 +178,7 @@ Ensure you have **Node.js** (v16.0 or higher) and **npm** installed on your mach
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Lakshara-Anand-VV/library-desk.git
+   git clone https://github.com/Kurinji-Eswar/library-desk.git
    cd library-desk
    ```
 
@@ -234,7 +233,7 @@ npm run preview
 
 Because **LIBRARY / DESK** is a static frontend application, the generated `dist/` directory can be deployed to any static hosting provider:
 
-- **Vercel**: Import the GitHub repo `Lakshara-Anand-VV/library-desk` — Vite preset auto-detected.
+- **Vercel**: Import the GitHub repo `Kurinji-Eswar/library-desk` — Vite preset auto-detected.
 - **Netlify**: Set build command to `npm run build` and publish directory to `dist`.
 - **GitHub Pages**: Deploy via `gh-pages` branch or GitHub Actions workflow.
 - **Cloudflare Pages / Firebase Hosting**: Static HTML/JS deployment.
@@ -252,16 +251,6 @@ Because **LIBRARY / DESK** is a static frontend application, the generated `dist
 - User authentication (Librarian & Student roles).
 - Barcode / QR scanner integration for fast book checkouts.
 - Export reports to CSV and PDF formats.
-
----
-
-## 👤 Author & Owner
-
-Developed and Owned by **[Lakshara Anand V V](https://github.com/Lakshara-Anand-VV)**
-
-- **GitHub Profile**: [Lakshara-Anand-VV](https://github.com/Lakshara-Anand-VV)
-- **LinkedIn Profile**: [lakshara-anand](https://linkedin.com/in/lakshara-anand)
-- **Repository**: [Lakshara-Anand-VV/library-desk](https://github.com/Lakshara-Anand-VV/library-desk)
 
 ---
 
