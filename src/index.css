@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+html,
+body {
+  background: #f1ebdd;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+}
+
+body {
+  color: #20201c;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #e7e0d0;
+}
+::-webkit-scrollbar-thumb {
+  background: #20201c;
+  border: 2px solid #e7e0d0;
+}
+
+.noscroll-x {
+  overflow-x: auto;
+}
+
+.paper-bg {
+  background-color: #f1ebdd;
+  background-image: radial-gradient(circle at 15% 20%, rgba(168, 216, 214, 0.55) 0%, rgba(168, 216, 214, 0) 40%),
+    radial-gradient(circle at 85% 15%, rgba(168, 216, 214, 0.45) 0%, rgba(168, 216, 214, 0) 38%),
+    radial-gradient(circle at 90% 80%, rgba(213, 139, 98, 0.18) 0%, rgba(213, 139, 98, 0) 40%),
+    radial-gradient(circle at 10% 85%, rgba(7, 137, 178, 0.1) 0%, rgba(7, 137, 178, 0) 40%);
+}
+
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.focus-ring:focus-visible {
+  outline: 3px solid #0789b2;
+  outline-offset: 2px;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+@keyframes winIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.win-anim {
+  animation: winIn 0.16s ease-out;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.toast-anim {
+  animation: toastIn 0.18s ease-out;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.blinker {
+  animation: blink 1.8s infinite;
+}
