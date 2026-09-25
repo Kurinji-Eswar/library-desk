@@ -30,11 +30,11 @@ function Sidebar() {
       {open && <div className="fixed inset-0 bg-ink/40 z-40 md:hidden" onClick={() => setOpen(false)}></div>}
       <aside
         className={`
-        fixed md:static top-0 left-0 h-full md:h-auto z-50 md:z-auto
+        fixed md:sticky top-0 md:top-[47px] left-0 h-full md:h-[calc(100vh-47px-31px)] z-50 md:z-30
         w-64 md:w-56 shrink-0 border-r-2 border-ink bg-creamSoft
         transform transition-transform md:transform-none
         ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
-        overflow-y-auto
+        overflow-y-auto self-start
       `}
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
