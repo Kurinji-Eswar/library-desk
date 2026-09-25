@@ -33,7 +33,7 @@ function DesktopShell() {
         <Sidebar />
 
         <main className="flex-1 min-w-0 p-3 sm:p-5">
-          <div className="max-w-6xl mx-auto h-full">
+          <div className="max-w-7xl mx-auto h-full">
             {view === 'desktop' && <DesktopView />}
             {view === 'books' && <BooksView />}
             {view === 'members' && <MembersView />}

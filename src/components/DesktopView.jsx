@@ -23,8 +23,8 @@ function DesktopView() {
   const pendingReservations = reservations.filter((r) => r.status === 'WAITING' || r.status === 'READY').length;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4">
-      <div className="space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
+      <div className="space-y-5">
         <Window title="LIBRARY / DESK — DESKTOP" status="SYSTEM READY">
           <div className="mb-4">
             <div className="flex flex-wrap gap-2 mb-1">
