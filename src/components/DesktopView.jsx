@@ -23,9 +23,9 @@ function DesktopView() {
   const pendingReservations = reservations.filter((r) => r.status === 'WAITING' || r.status === 'READY').length;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
       <div className="space-y-5">
-        <Window title="LIBRARY / DESK — DESKTOP" status="SYSTEM READY">
+        <Window title="LIBRARY / DESK — DESKTOP" status="SYSTEM READY" className="h-auto">
           <div className="mb-4">
             <div className="flex flex-wrap gap-2 mb-1">
               <Badge tone="mint">SYSTEM READY</Badge>
@@ -89,15 +89,15 @@ function DesktopView() {
           </div>
         </Window>
 
-        <Window title="RECENT ACTIVITY">
+        <Window title="RECENT ACTIVITY" className="h-auto">
           {activity.length === 0 ? (
             <EmptyState title="NO ACTIVITY YET" body="Actions you take will appear here." />
           ) : (
-            <ul className="divide-y-2 divide-ink/10">
+            <ul className="divide-y-2 divide-ink/10 max-h-64 overflow-y-auto pr-1">
               {activity.slice(0, 8).map((a) => (
                 <li key={a.id} className="py-2 flex items-start gap-3">
                   <span className="mt-1 w-1.5 h-1.5 rounded-full bg-blue shrink-0"></span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-grayish">{a.type}</div>
                     <div className="text-sm truncate">{a.text}</div>
                   </div>
@@ -110,7 +110,7 @@ function DesktopView() {
       </div>
 
       <div className="space-y-4">
-        <Window title="TODAY">
+        <Window title="TODAY" className="h-auto">
           <div className="space-y-3">
             <div>
               <div className="text-[10px] font-mono uppercase tracking-widest text-grayish">Date</div>
@@ -121,11 +121,11 @@ function DesktopView() {
               <div className="font-display font-bold">{fmtTime(now)}</div>
             </div>
             <div className="border-t-2 border-ink/10 pt-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm items-center">
                 <span className="text-grayish">Loans due today</span>
                 <Badge tone={dueTodayCount ? 'amber' : 'default'}>{dueTodayCount}</Badge>
               </div>
-              <div className="flex justify-between text-sm mt-2">
+              <div className="flex justify-between text-sm items-center mt-2">
                 <span className="text-grayish">Reservations pending</span>
                 <Badge tone={pendingReservations ? 'blue' : 'default'}>{pendingReservations}</Badge>
               </div>

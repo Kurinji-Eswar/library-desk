@@ -37,7 +37,7 @@ function ReportsView() {
 
   return (
     <div className="space-y-4">
-      <Window title="REPORTS / LIBRARY OVERVIEW">
+      <Window title="REPORTS / LIBRARY OVERVIEW" className="h-auto">
         <p className="text-xs text-grayish mb-4 font-mono">Simple client-side calculations from your local data — no external analytics.</p>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <StatBlock label="Total Books" value={stats.totalBooks} />
@@ -49,23 +49,23 @@ function ReportsView() {
       </Window>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <Window title="BOOK UTILIZATION">
+        <Window title="BOOK UTILIZATION" className="h-auto">
           <Bar label="Available" value={stats.available} max={stats.totalBooks} tone="mint" />
           <Bar label="Borrowed" value={stats.borrowed} max={stats.totalBooks} tone="amber" />
         </Window>
-        <Window title="BORROWING & RETURNS">
+        <Window title="BORROWING & RETURNS" className="h-auto">
           <Bar label="Loans this month" value={thisMonthLoans} max={Math.max(thisMonthLoans, thisMonthReturns, 1)} tone="blue" />
           <Bar label="Returns this month" value={thisMonthReturns} max={Math.max(thisMonthLoans, thisMonthReturns, 1)} tone="mint" />
         </Window>
       </div>
 
-      <Window title="CATEGORY DISTRIBUTION">
+      <Window title="CATEGORY DISTRIBUTION" className="h-auto">
         {categories.map((c) => (
           <Bar key={c.id} label={c.name} value={books.filter((b) => b.category === c.name).length} max={maxCat} tone="blue" />
         ))}
       </Window>
 
-      <Window title="TOP BORROWED BOOKS">
+      <Window title="TOP BORROWED BOOKS" className="h-auto">
         {topBooks.length === 0 || !topBooks[0].book ? (
           <EmptyState title="NO DATA YET" body="Borrowing activity will appear here." />
         ) : (

@@ -6,9 +6,9 @@ import WindowTitleBar from './WindowTitleBar.jsx';
  * area). Every major screen (Books, Members, Loans, ...) is rendered inside
  * one or more of these.
  */
-function Window({ title, status, onClose, children, right }) {
+function Window({ title, status, onClose, children, right, className = 'h-full' }) {
   return (
-    <div className="win-anim border-2 border-ink bg-cream shadow-hard flex flex-col h-full">
+    <div className={`win-anim border-2 border-ink bg-cream shadow-hard flex flex-col ${className}`}>
       <WindowTitleBar title={title} status={status} onClose={onClose} right={right} />
       <div className="p-4 overflow-y-auto noscroll-x grow">{children}</div>
     </div>

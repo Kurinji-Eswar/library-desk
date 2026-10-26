@@ -10,7 +10,7 @@ function SettingsView() {
 
   return (
     <div className="space-y-4">
-      <Window title="SYSTEM / SETTINGS" status="LOCAL MODE">
+      <Window title="SYSTEM / SETTINGS" status="LOCAL MODE" className="h-auto">
         <div className="grid sm:grid-cols-3 gap-2 mb-5">
           <StatBlock label="Schema Version" value={SCHEMA_VERSION} />
           <StatBlock label="Storage" value="localStorage" />
@@ -48,7 +48,7 @@ function SettingsView() {
         </div>
       </Window>
 
-      <Window title="ABOUT">
+      <Window title="ABOUT" className="h-auto">
         <div className="font-mono text-xs uppercase tracking-widest text-grayish space-y-1">
           <div>LIBRARY OS v1.0</div>
           <div>FRONTEND-ONLY APPLICATION</div>
