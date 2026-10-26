@@ -1,27 +1,36 @@
-# 📚 LIBRARY / DESK
+# 📚 LIBRARY / DESK — Enhanced Edition
 
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.3.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.4.21-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f?style=for-the-badge&logo=github)](https://Kurinji-Eswar.github.io/library-desk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-> **A Retro Library Management Workstation**
+> **A Retro Desktop Library Management Workstation**
 >
-> A frontend-only Library Management System styled as a nostalgic, early-2000s personal computer desktop — cream paper backgrounds, mint surfaces, chunky black borders, hard offset shadows, and window-chrome "applications" for every library workflow.
+> A local-first, frontend-only Library Management System designed as a nostalgic early-2000s desktop operating system — cream paper textures, mint highlights, ink-black chunky borders, hard offset shadows, window-chrome applications, and terminal status monitors.
 
 > [!NOTE]
-> This project is **100% frontend-only**. It has no backend, no database server, no authentication system, and no external APIs. All data lives locally in your browser's `localStorage`.
+> **100% Client-Side & Local-First**: This application runs entirely in your web browser with zero server dependencies, no database backends, and no external tracking. All catalog items, patron profiles, circulation records, and configuration settings persist synchronously in browser `localStorage`.
 
 ---
 
 ## 📋 Table of Contents
-
 - [Overview](#-overview)
-- [Key Features](#-key-features)
+- [Key Features & Modules](#-key-features--modules)
+  - [Desktop Workspace](#1-desktop-workspace)
+  - [Book Catalog & Shelf Management](#2-book-catalog--shelf-management)
+  - [Patron Directory](#3-patron-directory)
+  - [Circulation & Loan Records](#4-circulation--loan-records)
+  - [Returns & Overdue Penalties](#5-returns--overdue-penalties)
+  - [Holds & Reservations Queue](#6-holds--reservations-queue)
+  - [Classification & Taxonomy](#7-classification--taxonomy)
+  - [Analytics & Visual Reports](#8-analytics--visual-reports)
+  - [System Utilities & Data Portability](#9-system-utilities--data-portability)
+- [Design Aesthetics](#-design-aesthetics)
 - [Technology Stack](#-technology-stack)
 - [Project Architecture](#-project-architecture)
-- [Data Model & LocalStorage](#-data-model--localstorage)
+- [Data Model & Schema](#-data-model--schema)
 - [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -29,47 +38,105 @@
   - [Production Build](#production-build)
 - [Keyboard Shortcuts](#-keyboard-shortcuts)
 - [Deployment](#-deployment)
-- [Limitations & Future Scope](#-limitations--future-scope)
 - [License](#-license)
 
 ---
 
 ## 🖥️ Overview
 
-**LIBRARY / DESK** reimagines a library management system as a retro computer workstation. Instead of a conventional admin dashboard, the application presents each workflow — Books, Members, Loans, Returns, Reservations, Categories, Reports, and Settings — as its own interactive "application window," navigated from a persistent top system bar and a program-launcher sidebar.
+**LIBRARY / DESK** transforms traditional, sterile library administration into a tactile, retro desktop computing experience. Instead of basic tables, each workflow operates within an interactive application window equipped with authentic window title bars, control buttons, status indicators, and program launcher icons.
 
-It was designed and built as a portfolio-grade demonstration of a maintainable, component-driven React application with realistic CRUD workflows, client-side validation, and a fully working local-first data layer — with **no external server requirement**.
+Designed as a production-quality, component-driven React application, it includes full business logic validation (ISBN uniqueness, borrowing limits, stock management, overdue fine tracking, reservation promotion, and deletion guards).
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features & Modules
 
-- 🖥️ **Desktop Workspace**: Live library status widgets, recent activity feed, "Today" panel (due loans, pending reservations), quick-action buttons, and desktop shortcuts.
-- 📚 **Book Catalog**: Searchable and filterable collection table, abstract CSS-drawn book covers, detailed book windows with borrowing history, add/edit modal with validation (required fields, valid year, ISBN format, duplicate-ISBN guard), and safe delete (blocked while the book has active loans).
-- 👥 **Member Directory**: Member directory with search/filter by status and membership type, member profile windows (current loans, reservations, borrowing history, total fines), block/unblock controls, and safe delete guards.
-- 🔄 **Loan Management**: Checkout workflow with duplicate-loan prevention, blocked-member prevention, unavailable-book prevention, automatic due-date calculation (14-day default, editable), and live status (`ACTIVE`, `DUE TODAY`, `OVERDUE`, `RETURNED`).
-- 📥 **Returns & Fines**: Dedicated check-in queue, automatic overdue fine calculation (₹5/day), and fine waiving actions.
-- 📌 **Reservations**: Queue management with `WAITING` ➔ `READY` ➔ `FULFILLED` states, cancellation, and automatic "ready" notifications when a reserved book is checked in.
-- 🏷️ **Category Manager**: Full CRUD operations with book count tracking per category and delete guards when books are assigned.
-- 📊 **Analytics & Reports**: Visual client-side statistics including library overview, book utilization, category distribution, monthly borrowing/return activity, and top-borrowed books.
-- ⚙️ **System & Settings**: Export complete dataset as a single JSON backup file and reset to the original demo dataset at any time.
-- 🔍 **Global Search**: Instant search across books, members, and active loans from the top system bar.
-- 🔔 **Toast Notification Stack**: Retro audio-visual style notifications for all user actions.
-- 📱 **Responsive Design**: Collapsible sidebar, horizontal scroll safety, and window adjustments for desktop, tablet, and mobile screens.
+### 1. Desktop Workspace
+- **System Dashboard**: Real-time summary cards displaying Total Catalog Size, Available Copies, Borrowed Stock, Overdue Items, Active Patrons, and Active Loans.
+- **Quick Action Bar**: Instant shortcuts to Issue Loan, Add Book, Register Patron, and Process Return.
+- **Today's Docket**: Date/time monitor with real-time indicators for loans due today and pending reservations.
+- **Station Event Log**: Chronological live feed logging transactions (acquisitions, checkouts, returns, patron registrations).
+- **Desktop Program Launcher**: Retro icon grid providing one-click navigation to any subsystem.
+
+### 2. Book Catalog & Shelf Management
+- **Search & Filter**: Real-time keyword filtering across title, author, ISBN, shelf location, and category tags.
+- **Abstract CSS Book Covers**: Procedurally styled geometric book covers rendered via pure CSS.
+- **Item Details**: Full bibliographic overview including publisher, publication year, shelf assignment, and checkout history.
+- **Validation Engine**: Required fields, year validation, ISBN formatting, and duplicate ISBN detection.
+- **Delete Protection**: Prevents deletion of any book with active loans in circulation.
+
+### 3. Patron Directory
+- **Patron Management**: Directory with search by name, email, phone, and patron ID.
+- **Membership Tiers**: Support for General, Premium, Student, and Faculty tiers.
+- **Suspension Controls**: Toggle active/blocked status to restrict borrowing privileges when needed.
+- **Borrower Profile**: Detailed patron view displaying current loans, reservation holds, lifetime checkout history, and accumulated fines.
+- **Safe Deletion**: Deletion blocked while patron has outstanding borrowed items.
+
+### 4. Circulation & Loan Records
+- **Checkout Engine**: Loan creation with automatic 14-day due date calculation (configurable).
+- **Borrowing Guards**: Prevents loans if a copy is unavailable, patron is blocked, or patron already has the same title on loan.
+- **Live Status Tracking**: Automatic status updates based on current date: `ACTIVE`, `DUE TODAY`, `OVERDUE`, `RETURNED`.
+- **Searchable Loan Registry**: Search by Loan ID, title, or borrower name with status tab filtering.
+
+### 5. Returns & Overdue Penalties
+- **Check-In Queue**: Prioritized list of active loans sorted by due date urgency.
+- **Fine Calculation**: Dynamic overdue fine computation at ₹5/day past the due date.
+- **Settlement Actions**: Process returns with one-click collection or waive penalties.
+- **Automatic Hold Promotion**: Returning a reserved book instantly marks the next waiting hold as `READY`.
+
+### 6. Holds & Reservations Queue
+- **Waitlist Tracking**: Queue position tracking (`#1`, `#2`, etc.) per book title.
+- **State Machine**: Transitions through `WAITING` ➔ `READY` ➔ `FULFILLED` or `CANCELLED`.
+- **One-Click Fulfillment**: Converts a ready reservation into an active loan with prefilled details.
+
+### 7. Classification & Taxonomy
+- **Category System**: Management of Dewey/subject classification tags with distinct retro color markers.
+- **Holdings Counter**: Real-time counter of total copies assigned to each category.
+- **Integrity Guard**: Blocks category deletion if books remain assigned to that category.
+
+### 8. Analytics & Visual Reports
+- **Collection Holdings**: Subject distribution progress bars visualizing relative volume across categories.
+- **Circulation Distribution**: Breakdown of Active, Overdue, Due Today, and Returned loans.
+- **Borrower Leaderboard**: Top active library borrowers ranked by checkout volume.
+- **Pure CSS Visualizations**: Zero external charting dependencies for maximum speed and bundle efficiency.
+
+### 9. System Utilities & Data Portability
+- **JSON Backup Export**: Download the entire library database (books, members, loans, reservations, categories) as a single `.json` file.
+- **Factory Demo Reset**: Restore the standard sample catalog and test dataset with one confirmation click.
+- **Global Search**: System bar search with live dropdown across books, patrons, and active loans.
+- **Retro Toast Notifications**: Multi-tone toast notifications (`success`, `warning`, `error`, `default`) for all operational feedback.
+
+---
+
+## 🎨 Design Aesthetics
+
+- **Color Tokens**: Curated nostalgic palette:
+  - Cream Paper: `#F1EBDD`
+  - Soft Cream: `#E7E0D0`
+  - Mint Surface: `#A8D8D6`
+  - Ink Black: `#20201C`
+  - Classic Cyan: `#0789B2`
+  - Amber Gold: `#D58B62`
+  - Grayish Muted: `#8E8B80`
+- **Chunky Retro Shadows**: Hard offset shadows (`5px 5px 0 #20201C`, `3px 3px 0 #20201C`, `8px 8px 0 #20201C`) with solid 2px borders.
+- **Paper & Grain Overlay**: Radial ambient lighting and fine SVG grain texture for physical desktop ambiance.
+- **Typography**: Paired monospace and sans-serif fonts:
+  - Headers & Displays: *Space Mono* & *IBM Plex Mono*
+  - Body & Reading: *Inter*
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology | Description |
+| Layer | Technology | Purpose |
 | :--- | :--- | :--- |
-| **UI Library** | React 18 (JS / JSX) | Modern declarative component interface |
-| **Build Tool** | Vite 5 | Fast HMR and bundle optimizer |
-| **Styling** | Tailwind CSS 3 | Utility-first styling with retro custom CSS tokens |
-| **State Management** | React Context & Hooks | Centralized custom hook (`useLibraryStore`) |
-| **Persistence** | Web Browser `localStorage` | Local-first synchronous persistence layer |
-| **Graphics & Icons** | SVG & CSS | Lightweight inline SVG icons and pure CSS covers |
-| **Typography** | Google Fonts | *Space Mono*, *IBM Plex Mono*, and *Inter* |
+| **Framework** | [React 18.3](https://react.dev/) | Component architecture, custom hooks, and state management |
+| **Bundler** | [Vite 5.4](https://vitejs.dev/) | Fast HMR dev server and optimized production build |
+| **Styling** | [Tailwind CSS 3.4](https://tailwindcss.com/) | Utility styling paired with retro color tokens & box shadows |
+| **Icons** | Custom Inline SVG | 30+ lightweight monochrome retro icons via [`Icon.jsx`](src/components/icons/Icon.jsx) |
+| **Persistence** | Browser `localStorage` | Synchronous, local-first persistence with schema versioning |
+| **Fonts** | Google Fonts | Space Mono, IBM Plex Mono, Inter |
 
 ---
 
@@ -78,90 +145,134 @@ It was designed and built as a portfolio-grade demonstration of a maintainable, 
 ```
 library-desk/
 ├── public/
-│   └── favicon.svg
+│   └── favicon.svg                  # Retro floppy-disk / book favicon
 ├── src/
 │   ├── components/
-│   │   ├── Layout/          # App Shell: TopBar, Sidebar, Window Chrome, DesktopIcon, StatusFooter
-│   │   ├── UI/              # Primitives: Button, Input, Select, Modal, Badge, StatBlock, Toast
-│   │   ├── icons/           # Icon.jsx — Central inline SVG icon set
-│   │   ├── Books/           # BooksView, BookTable, BookDetails, BookFormModal, BookCover
-│   │   ├── Members/         # MembersView, MemberTable, MemberProfile, MemberFormModal
-│   │   ├── Loans/           # LoansView, LoanTable, NewLoanModal
-│   │   ├── Returns/         # ReturnsView
-│   │   ├── Reservations/    # ReservationsView, NewReservationModal
-│   │   ├── Categories/      # CategoriesView
-│   │   ├── Reports/         # ReportsView, Bar progress visualizer
-│   │   ├── Settings/        # SettingsView
-│   │   └── DesktopView.jsx  # Main Desktop / Home Screen
+│   │   ├── Books/                   # Book Catalog Module
+│   │   │   ├── BookCover.jsx        # Procedural CSS geometric covers
+│   │   │   ├── BookDetails.jsx      # Item profile & loan history
+│   │   │   ├── BookFormModal.jsx    # Add / Edit book modal with validation
+│   │   │   ├── BooksView.jsx        # Catalog explorer & filter view
+│   │   │   └── BookTable.jsx        # Data grid table for books
+│   │   ├── Categories/              # Taxonomy Module
+│   │   │   └── CategoriesView.jsx   # Classification manager
+│   │   ├── icons/                   # Custom Icons
+│   │   │   └── Icon.jsx             # Unified SVG icon dictionary
+│   │   ├── Layout/                  # Desktop Shell & Window Chrome
+│   │   │   ├── DesktopIcon.jsx      # Desktop shortcut icons
+│   │   │   ├── DesktopShell.jsx     # Master application shell
+│   │   │   ├── Sidebar.jsx          # Collapsible program navigation
+│   │   │   ├── StatusFooter.jsx     # Sticky desktop status footer
+│   │   │   ├── TopBar.jsx           # Global system bar, clock & search
+│   │   │   ├── Window.jsx           # Window frame wrapper
+│   │   │   └── WindowTitleBar.jsx   # Window title & control buttons
+│   │   ├── Loans/                   # Circulation Module
+│   │   │   ├── LoansView.jsx        # Active circulation registry
+│   │   │   ├── LoanTable.jsx        # Tabular loan records
+│   │   │   └── NewLoanModal.jsx     # Checkout loan creation modal
+│   │   ├── Members/                 # Patron Module
+│   │   │   ├── MemberFormModal.jsx  # Patron registration modal
+│   │   │   ├── MemberProfile.jsx    # Patron record & loan history
+│   │   │   ├── MembersView.jsx      # Patron directory
+│   │   │   └── MemberTable.jsx      # Tabular member records
+│   │   ├── Reports/                 # Analytics Module
+│   │   │   ├── Bar.jsx              # Retro horizontal progress bar
+│   │   │   └── ReportsView.jsx      # Visual reports & statistics
+│   │   ├── Reservations/            # Hold Module
+│   │   │   ├── NewReservationModal.jsx # Hold placement modal
+│   │   │   └── ReservationsView.jsx # Reservation waitlist manager
+│   │   ├── Returns/                 # Check-In Module
+│   │   │   └── ReturnsView.jsx      # Return queue & fine settlement
+│   │   ├── Settings/                # Configuration Module
+│   │   │   └── SettingsView.jsx     # Export, reset, and diagnostics
+│   │   ├── UI/                      # Shared Retro Primitives
+│   │   │   ├── Badge.jsx            # Status badges
+│   │   │   ├── Button.jsx           # Retro tactile buttons
+│   │   │   ├── EmptyState.jsx       # Blank state cards
+│   │   │   ├── Input.jsx            # Themed input fields
+│   │   │   ├── Modal.jsx            # Dialogs & ConfirmDialog
+│   │   │   ├── Select.jsx           # Custom select controls
+│   │   │   ├── StatBlock.jsx        # Highlight KPI counters
+│   │   │   └── Toast.jsx            # System notification stack
+│   │   └── DesktopView.jsx          # Main Desktop Station Dashboard
 │   ├── context/
-│   │   └── LibraryContext.jsx # React Context wrapper exposing useLibrary()
-│   ├── hooks/
-│   │   ├── useLibraryStore.js # State container + CRUD & business rules logic
-│   │   └── useLocalStorage.js # Generic localStorage synchronization hook
+│   │   └── LibraryContext.jsx       # React Context provider & consumer hook
 │   ├── data/
-│   │   └── seedData.js        # Initial mock library records
+│   │   └── seedData.js              # Comprehensive initial dataset
+│   ├── hooks/
+│   │   ├── useLibraryStore.js       # Central state store & business logic
+│   │   └── useLocalStorage.js       # Generic localStorage hook
 │   ├── utils/
-│   │   ├── dateUtils.js       # Date arithmetic and formatting utilities
-│   │   └── libraryUtils.js    # UID generator, storage keys, persistence helpers
-│   ├── App.jsx              # Main App entry wrapper
-│   ├── main.jsx             # React DOM root render
-│   └── index.css            # Tailwind directives + Retro styles & animations
-├── index.html
-├── package.json
-├── vite.config.js
-├── tailwind.config.js
-└── postcss.config.js
+│   │   ├── dateUtils.js             # ISO date arithmetic & formatters
+│   │   └── libraryUtils.js          # UID generator & storage persistence
+│   ├── App.jsx                      # Root application wrapper
+│   ├── index.css                    # Tailwind imports, CSS tokens & grain
+│   └── main.jsx                     # Entry React DOM renderer
+├── index.html                       # HTML5 entry with viewport & fonts
+├── package.json                     # Project manifest & npm scripts
+├── postcss.config.js                # PostCSS Tailwind plugin setup
+├── tailwind.config.js               # Theme color tokens & hard shadows
+└── vite.config.js                   # Vite React plugin configuration
 ```
 
 ---
 
-## 💾 Data Model & LocalStorage
+## 💾 Data Model & Schema
 
-Data is stored locally under namespaced keys:
+All records are persisted under namespaced `localStorage` keys:
 
-- `library_books`: Book catalog & stock counts
-- `library_members`: Member profiles & status
-- `library_loans`: Active & completed loan records
-- `library_reservations`: Hold requests & queue positions
-- `library_categories`: Book categories
-- `library_schema_version`: Schema state marker
+- `library_books`: Catalog inventory
+- `library_members`: Patron records
+- `library_loans`: Active and completed circulation records
+- `library_reservations`: Hold queue records
+- `library_categories`: Subject classification categories
+- `library_schema_version`: Schema marker (v1)
 
-### Schema Overview
+### Types
 
 ```typescript
-Book {
-  id: string,
-  title: string,
-  author: string,
-  isbn: string,
-  category: string,
-  publisher: string,
-  year: number,
-  totalCopies: number,
-  availableCopies: number,
-  shelf: string,
-  addedDate: string
+interface Book {
+  id: string;               // e.g. "BK-1"
+  title: string;
+  author: string;
+  isbn: string;
+  category: string;
+  publisher: string;
+  year: number;
+  totalCopies: number;
+  availableCopies: number;
+  shelf: string;
+  addedDate: string;        // ISO format
 }
 
-Member {
-  id: string,
-  name: string,
-  email: string,
-  phone: string,
-  membershipType: string,
-  joinedDate: string,
-  status: 'ACTIVE' | 'BLOCKED'
+interface Member {
+  id: string;               // e.g. "MB-1"
+  name: string;
+  email: string;
+  phone: string;
+  membershipType: 'General' | 'Premium' | 'Student' | 'Faculty';
+  joinedDate: string;
+  status: 'ACTIVE' | 'BLOCKED';
 }
 
-Loan {
-  id: string,
-  bookId: string,
-  memberId: string,
-  borrowedDate: string,
-  dueDate: string,
-  returnedDate?: string,
-  status: 'ACTIVE' | 'RETURNED',
-  fine: number
+interface Loan {
+  id: string;               // e.g. "LN-1"
+  bookId: string;
+  memberId: string;
+  borrowedDate: string;
+  dueDate: string;
+  returnedDate: string | null;
+  status: 'ACTIVE' | 'DUE TODAY' | 'OVERDUE' | 'RETURNED';
+  fine: number;
+}
+
+interface Reservation {
+  id: string;               // e.g. "RS-1"
+  bookId: string;
+  memberId: string;
+  requestedDate: string;
+  position: number;
+  status: 'WAITING' | 'READY' | 'FULFILLED' | 'CANCELLED';
 }
 ```
 
@@ -170,10 +281,8 @@ Loan {
 ## 🚀 Getting Started
 
 ### Prerequisites
-
-Ensure you have **Node.js** (v16.0 or higher) and **npm** installed on your machine.
-
-- [Node.js Download](https://nodejs.org/)
+- **Node.js** (v16.0 or higher recommended)
+- **npm** (v7.0 or higher)
 
 ### Installation
 
@@ -190,7 +299,7 @@ Ensure you have **Node.js** (v16.0 or higher) and **npm** installed on your mach
 
 ### Development Server
 
-Start the local Vite development server:
+Start the local Vite development server with Hot Module Replacement (HMR):
 
 ```bash
 npm run dev
@@ -200,7 +309,7 @@ Open your browser and navigate to `http://localhost:5173`.
 
 ### Production Build
 
-To build the static production bundle:
+Create an optimized static production bundle in `dist/`:
 
 ```bash
 npm run build
@@ -216,45 +325,34 @@ npm run preview
 
 ## ⌨️ Keyboard Shortcuts
 
-| Shortcut | Action |
-| :--- | :--- |
-| `F1` | Open **Desktop / Home** |
-| `F2` | Open **Books Application** |
-| `F3` | Open **Members Application** |
-| `F4` | Open **Loans Application** |
-| `F5` | Open **Returns Queue** |
-| `F6` | Open **Reservations Queue** |
-| `F7` | Open **Categories Manager** |
-| `F8` | Open **Reports & Analytics** |
-| `F9` | Open **System Settings** |
+| Shortcut | Destination | Description |
+| :---: | :--- | :--- |
+| `F1` | **Desktop** | Main desktop workspace & activity docket |
+| `F2` | **Books** | Book collection & catalog management |
+| `F3` | **Members** | Patron directory & borrowing profiles |
+| `F4` | **Loans** | Active circulation registry & checkouts |
+| `F5` | **Returns** | Check-in queue & overdue fine collection |
+| `F6` | **Reservations** | Hold queue & waitlist processing |
+| `F7` | **Categories** | Subject classification taxonomies |
+| `F8` | **Reports** | Analytics, distribution & borrowing stats |
+| `F9` | **System** | Backup export & demo data reset |
 
 ---
 
 ## 🌐 Deployment
 
-Because **LIBRARY / DESK** is a static frontend application, the generated `dist/` directory can be deployed to any static hosting provider:
+Because **LIBRARY / DESK** compiles to pure static HTML, JavaScript, and CSS, it can be deployed to any static host:
 
-- **Vercel**: Import the GitHub repo `Kurinji-Eswar/library-desk` — Vite preset auto-detected.
+- **GitHub Pages**: Build and deploy via `gh-pages`:
+  ```bash
+  npm run deploy
+  ```
+- **Vercel**: Connect the repository for automatic preview and production deployments.
 - **Netlify**: Set build command to `npm run build` and publish directory to `dist`.
-- **GitHub Pages**: Deploy via `gh-pages` branch or GitHub Actions workflow.
-- **Cloudflare Pages / Firebase Hosting**: Static HTML/JS deployment.
-
----
-
-## 📌 Limitations & Future Scope
-
-### Current Scope
-- Frontend-only application without a backend API or server database.
-- Browser `localStorage` persistence (clearing cache resets local changes unless exported).
-
-### Future Roadmap
-- Node.js / Express backend with PostgreSQL / MongoDB storage.
-- User authentication (Librarian & Student roles).
-- Barcode / QR scanner integration for fast book checkouts.
-- Export reports to CSV and PDF formats.
+- **Cloudflare Pages**: Connect the GitHub repo with the standard Vite framework preset.
 
 ---
 
 ## 📄 License
 
-This project is open-source and available under the [MIT License](LICENSE).
+This project is open-source and released under the [MIT License](LICENSE).
