@@ -1,0 +1,74 @@
+erDiagram
+    CATEGORIES ||--o{ BOOKS : "classifies (1:N)"
+    BOOKS ||--o{ LOANS : "borrowed_in (1:N)"
+    MEMBERS ||--o{ LOANS : "borrows (1:N)"
+    BOOKS ||--o{ RESERVATIONS : "held_by (1:N)"
+    MEMBERS ||--o{ RESERVATIONS : "requests (1:N)"
+
+    CATEGORIES {
+        bigserial id PK
+        varchar_32 code UK
+        varchar_100 name UK
+        text description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    BOOKS {
+        bigserial id PK
+        varchar_32 code UK
+        varchar_32 isbn UK
+        varchar_255 title
+        varchar_255 author
+        varchar_255 publisher
+        int publication_year
+        bigint category_id FK
+        int total_copies
+        int available_copies
+        varchar_64 shelf_location
+        text description
+        bigint version
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    MEMBERS {
+        bigserial id PK
+        varchar_32 member_code UK
+        varchar_255 full_name
+        varchar_255 email UK
+        varchar_64 phone
+        text address
+        varchar_32 membership_type
+        varchar_32 status
+        date joined_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    LOANS {
+        bigserial id PK
+        varchar_32 loan_code UK
+        bigint book_id FK
+        bigint member_id FK
+        date issue_date
+        date due_date
+        date return_date
+        varchar_32 status
+        numeric_10_2 fine_amount
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    RESERVATIONS {
+        bigserial id PK
+        varchar_32 reservation_code UK
+        bigint book_id FK
+        bigint member_id FK
+        date reservation_date
+        int queue_position
+        varchar_32 status
+        timestamp fulfilled_at
+        timestamp created_at
+        timestamp updated_at
+    }

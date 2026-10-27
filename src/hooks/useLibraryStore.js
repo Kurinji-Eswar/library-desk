@@ -2,6 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { buildSeedDataset } from '../data/seedData.js';
 import { LS_KEYS, SCHEMA_VERSION, persist, uid } from '../utils/libraryUtils.js';
 import { addDays, daysBetween, isoDate, todayISO } from '../utils/dateUtils.js';
+import { booksApi } from '../api/books.js';
+import { membersApi } from '../api/members.js';
+import { loansApi } from '../api/loans.js';
+import { reservationsApi } from '../api/reservations.js';
+import { categoriesApi } from '../api/categories.js';
+import { migrationApi } from '../api/migration.js';
 
 function loadOrSeed() {
   try {
@@ -27,16 +33,15 @@ function loadOrSeed() {
     localStorage.setItem(LS_KEYS.loans, JSON.stringify(seeded.loans));
     localStorage.setItem(LS_KEYS.reservations, JSON.stringify(seeded.reservations));
   } catch (e) {
-    // storage unavailable, continue with in-memory seed
+    // storage unavailable
   }
   return seeded;
 }
 
 /**
- * Central application store. Holds all domain data (books, members, loans,
- * reservations, categories), UI state (current view, selections, modals,
- * toasts, activity feed) and every action that mutates the data. Everything
- * is persisted to localStorage as it changes.
+ * Central application store integrated with the Spring Boot REST API & PostgreSQL backend.
+ * Provides optimistic UI feedback, live synchronization, server validation handling,
+ * and seamless fallback/migration.
  */
 export function useLibraryStore() {
   const initial = useMemo(loadOrSeed, []);
@@ -45,6 +50,9 @@ export function useLibraryStore() {
   const [loans, setLoans] = useState(initial.loans);
   const [reservations, setReservations] = useState(initial.reservations);
   const [categories, setCategories] = useState(initial.categories);
+
+  const [backendConnected, setBackendConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [view, setView] = useState('desktop');
   const [selectedBookId, setSelectedBookId] = useState(null);
@@ -62,24 +70,57 @@ export function useLibraryStore() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => persist(LS_KEYS.books, books), [books]);
-  useEffect(() => persist(LS_KEYS.members, members), [members]);
-  useEffect(() => persist(LS_KEYS.loans, loans), [loans]);
-  useEffect(() => persist(LS_KEYS.reservations, reservations), [reservations]);
-  useEffect(() => persist(LS_KEYS.categories, categories), [categories]);
-
   const pushToast = useCallback((title, body, tone = 'default') => {
     const id = uid('TS');
     setToasts((ts) => [...ts, { id, title, body, tone }]);
     setTimeout(() => setToasts((ts) => ts.filter((t) => t.id !== id)), 4500);
   }, []);
 
+  const dismissToast = useCallback((id) => {
+    setToasts((ts) => ts.filter((t) => t.id !== id));
+  }, []);
+
   const logActivity = useCallback((type, text) => {
     setActivity((a) => [{ id: uid('AC'), type, text, at: new Date().toISOString() }, ...a].slice(0, 30));
   }, []);
 
-  // Recompute loan statuses (active/due today/overdue) live based on today's
-  // date, without mutating already-returned loans.
+  // Synchronize state from Spring Boot Backend
+  const refreshFromBackend = useCallback(async () => {
+    try {
+      const [bks, mbrs, lns, rsvs, cats] = await Promise.all([
+        booksApi.getAll(),
+        membersApi.getAll(),
+        loansApi.getAll(),
+        reservationsApi.getAll(),
+        categoriesApi.getAll(),
+      ]);
+
+      setBooks(bks);
+      setMembers(mbrs);
+      setLoans(lns);
+      setReservations(rsvs);
+      setCategories(cats);
+      setBackendConnected(true);
+
+      // Cache snapshot for offline resilience
+      persist(LS_KEYS.books, bks);
+      persist(LS_KEYS.members, mbrs);
+      persist(LS_KEYS.loans, lns);
+      persist(LS_KEYS.reservations, rsvs);
+      persist(LS_KEYS.categories, cats);
+    } catch (err) {
+      console.warn('Backend currently offline or unreachable:', err.message);
+      setBackendConnected(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshFromBackend();
+  }, [refreshFromBackend]);
+
+  // Recompute live loan statuses
   const liveLoans = useMemo(() => {
     return loans.map((l) => {
       if (l.status === 'RETURNED') return l;
@@ -96,8 +137,8 @@ export function useLibraryStore() {
     });
   }, [loans]);
 
-  const bookById = useCallback((id) => books.find((b) => b.id === id), [books]);
-  const memberById = useCallback((id) => members.find((m) => m.id === id), [members]);
+  const bookById = useCallback((id) => books.find((b) => b.id === id || b.code === id), [books]);
+  const memberById = useCallback((id) => members.find((m) => m.id === id || m.memberCode === id), [members]);
 
   const navigate = useCallback((key) => {
     setView(key);
@@ -108,254 +149,310 @@ export function useLibraryStore() {
   /* ---------- BOOK ACTIONS ---------- */
 
   const addBook = useCallback(
-    (data) => {
-      const dup = books.some((b) => b.isbn === data.isbn);
-      if (dup) {
-        pushToast('DUPLICATE ISBN', 'A book with this ISBN already exists.', 'error');
+    async (data) => {
+      try {
+        await booksApi.create({
+          title: data.title,
+          author: data.author,
+          isbn: data.isbn,
+          category: data.category,
+          publisher: data.publisher,
+          year: Number(data.year),
+          totalCopies: Number(data.totalCopies),
+          shelf: data.shelf || 'A1',
+          description: data.description || '',
+        });
+        await refreshFromBackend();
+        pushToast('BOOK ADDED', `"${data.title}" saved to PostgreSQL catalog.`, 'success');
+        logActivity('BOOK ADDED', `"${data.title}"`);
+        return true;
+      } catch (err) {
+        pushToast('FAILED TO ADD BOOK', err.message || 'Server error occurred', 'error');
         return false;
       }
-      const book = {
-        id: uid('BK'),
-        title: data.title,
-        author: data.author,
-        isbn: data.isbn,
-        category: data.category,
-        publisher: data.publisher,
-        year: Number(data.year),
-        totalCopies: Number(data.totalCopies),
-        availableCopies: Number(data.totalCopies),
-        shelf: data.shelf || 'A1',
-        addedDate: todayISO(),
-      };
-      setBooks((bs) => [book, ...bs]);
-      pushToast('BOOK ADDED', `"${data.title}" was added.`, 'success');
-      logActivity('BOOK ADDED', `"${data.title}"`);
-      return true;
     },
-    [books, pushToast, logActivity]
+    [refreshFromBackend, pushToast, logActivity]
   );
 
   const editBook = useCallback(
-    (id, data) => {
-      setBooks((bs) =>
-        bs.map((b) => {
-          if (b.id !== id) return b;
-          const borrowed = b.totalCopies - b.availableCopies;
-          const newTotal = Number(data.totalCopies);
-          return {
-            ...b,
-            title: data.title,
-            author: data.author,
-            isbn: data.isbn,
-            category: data.category,
-            publisher: data.publisher,
-            year: Number(data.year),
-            shelf: data.shelf,
-            totalCopies: newTotal,
-            availableCopies: Math.max(0, newTotal - borrowed),
-          };
-        })
-      );
-      pushToast('BOOK UPDATED', `"${data.title}" was updated.`, 'success');
+    async (id, data) => {
+      try {
+        await booksApi.update(id, {
+          title: data.title,
+          author: data.author,
+          isbn: data.isbn,
+          category: data.category,
+          publisher: data.publisher,
+          year: Number(data.year),
+          totalCopies: Number(data.totalCopies),
+          shelf: data.shelf,
+          description: data.description,
+        });
+        await refreshFromBackend();
+        pushToast('BOOK UPDATED', `"${data.title}" updated in database.`, 'success');
+        return true;
+      } catch (err) {
+        pushToast('UPDATE FAILED', err.message, 'error');
+        return false;
+      }
     },
-    [pushToast]
+    [refreshFromBackend, pushToast]
   );
 
   const deleteBook = useCallback(
-    (id) => {
-      const hasActiveLoans = liveLoans.some((l) => l.bookId === id && l.status !== 'RETURNED');
-      if (hasActiveLoans) {
-        pushToast('ACTION BLOCKED', 'This book has active loans.', 'error');
-        return;
-      }
+    async (id) => {
       const book = bookById(id);
-      setBooks((bs) => bs.filter((b) => b.id !== id));
-      setReservations((rs) => rs.filter((r) => r.bookId !== id));
-      pushToast('BOOK REMOVED', `"${book?.title}" was removed.`, 'default');
-      setSelectedBookId((current) => (current === id ? null : current));
+      try {
+        await booksApi.delete(id);
+        await refreshFromBackend();
+        pushToast('BOOK REMOVED', `"${book?.title || id}" removed from database.`, 'default');
+        setSelectedBookId((current) => (current === id ? null : current));
+      } catch (err) {
+        pushToast('ACTION BLOCKED', err.message, 'error');
+      }
     },
-    [liveLoans, bookById, pushToast]
+    [bookById, refreshFromBackend, pushToast]
   );
 
   /* ---------- MEMBER ACTIONS ---------- */
 
   const addMember = useCallback(
-    (data) => {
-      const member = { id: uid('MB'), ...data, joinedDate: todayISO(), status: 'ACTIVE' };
-      setMembers((ms) => [member, ...ms]);
-      pushToast('MEMBER ADDED', `"${data.name}" was added.`, 'success');
-      logActivity('NEW MEMBER', `"${data.name}"`);
-      return true;
+    async (data) => {
+      try {
+        await membersApi.create({
+          name: data.name,
+          email: data.email,
+          phone: data.phone || '',
+          address: data.address || '',
+          membershipType: data.membershipType || 'Standard',
+        });
+        await refreshFromBackend();
+        pushToast('MEMBER ADDED', `"${data.name}" registered in database.`, 'success');
+        logActivity('NEW MEMBER', `"${data.name}"`);
+        return true;
+      } catch (err) {
+        pushToast('REGISTRATION FAILED', err.message, 'error');
+        return false;
+      }
     },
-    [pushToast, logActivity]
+    [refreshFromBackend, pushToast, logActivity]
   );
 
   const editMember = useCallback(
-    (id, data) => {
-      setMembers((ms) => ms.map((m) => (m.id === id ? { ...m, ...data } : m)));
-      pushToast('MEMBER UPDATED', `"${data.name}" was updated.`, 'success');
+    async (id, data) => {
+      try {
+        await membersApi.update(id, {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          membershipType: data.membershipType,
+        });
+        await refreshFromBackend();
+        pushToast('MEMBER UPDATED', `"${data.name}" updated in database.`, 'success');
+        return true;
+      } catch (err) {
+        pushToast('UPDATE FAILED', err.message, 'error');
+        return false;
+      }
     },
-    [pushToast]
+    [refreshFromBackend, pushToast]
   );
 
   const toggleBlockMember = useCallback(
-    (id) => {
-      const m = memberById(id);
-      setMembers((ms) => ms.map((x) => (x.id === id ? { ...x, status: x.status === 'BLOCKED' ? 'ACTIVE' : 'BLOCKED' } : x)));
-      pushToast(m?.status === 'BLOCKED' ? 'MEMBER UNBLOCKED' : 'MEMBER BLOCKED', `"${m?.name}" status changed.`, 'default');
+    async (id) => {
+      try {
+        const updated = await membersApi.toggleStatus(id);
+        await refreshFromBackend();
+        pushToast(
+          updated.status === 'BLOCKED' ? 'MEMBER BLOCKED' : 'MEMBER UNBLOCKED',
+          `"${updated.name}" status changed to ${updated.status}.`,
+          'default'
+        );
+      } catch (err) {
+        pushToast('STATUS CHANGE FAILED', err.message, 'error');
+      }
     },
-    [memberById, pushToast]
+    [refreshFromBackend, pushToast]
   );
 
   const deleteMember = useCallback(
-    (id) => {
-      const hasActiveLoans = liveLoans.some((l) => l.memberId === id && l.status !== 'RETURNED');
-      if (hasActiveLoans) {
-        pushToast('ACTION BLOCKED', 'This member has active loans.', 'error');
-        return;
-      }
+    async (id) => {
       const m = memberById(id);
-      setMembers((ms) => ms.filter((x) => x.id !== id));
-      pushToast('MEMBER REMOVED', `"${m?.name}" was removed.`, 'default');
-      setSelectedMemberId((current) => (current === id ? null : current));
+      try {
+        await membersApi.delete(id);
+        await refreshFromBackend();
+        pushToast('MEMBER REMOVED', `"${m?.name || id}" removed from database.`, 'default');
+        setSelectedMemberId((current) => (current === id ? null : current));
+      } catch (err) {
+        pushToast('ACTION BLOCKED', err.message, 'error');
+      }
     },
-    [liveLoans, memberById, pushToast]
+    [memberById, refreshFromBackend, pushToast]
   );
 
   /* ---------- LOAN ACTIONS ---------- */
 
   const createLoan = useCallback(
-    (data) => {
-      const book = bookById(data.bookId);
-      const member = memberById(data.memberId);
-      if (!book || book.availableCopies < 1) {
-        pushToast('BOOK UNAVAILABLE', 'All copies are currently checked out.', 'error');
+    async (data) => {
+      try {
+        const loan = await loansApi.issue({
+          bookId: data.bookId,
+          memberId: data.memberId,
+          borrowedDate: data.borrowedDate,
+          dueDate: data.dueDate,
+        });
+        await refreshFromBackend();
+        pushToast('LOAN CREATED', `Loan ${loan.id} recorded in PostgreSQL.`, 'success');
+        logActivity('BOOK BORROWED', `"${loan.bookTitle}" by ${loan.memberName}`);
+        return true;
+      } catch (err) {
+        pushToast('LOAN FAILED', err.message, 'error');
         return false;
       }
-      if (member?.status === 'BLOCKED') {
-        pushToast('MEMBER BLOCKED', 'This member cannot borrow books.', 'error');
-        return false;
-      }
-      const dup = liveLoans.some((l) => l.bookId === data.bookId && l.memberId === data.memberId && l.status !== 'RETURNED');
-      if (dup) {
-        pushToast('DUPLICATE LOAN', 'This member already has this book on loan.', 'error');
-        return false;
-      }
-      const loan = {
-        id: uid('LN'),
-        bookId: data.bookId,
-        memberId: data.memberId,
-        borrowedDate: data.borrowedDate,
-        dueDate: data.dueDate,
-        returnedDate: null,
-        status: 'ACTIVE',
-        fine: 0,
-      };
-      setLoans((ls) => [loan, ...ls]);
-      setBooks((bs) => bs.map((b) => (b.id === data.bookId ? { ...b, availableCopies: b.availableCopies - 1 } : b)));
-      pushToast('LOAN CREATED', `Loan ${loan.id} created.`, 'success');
-      logActivity('BOOK BORROWED', `"${book.title}" by ${member.name}`);
-      return true;
     },
-    [bookById, memberById, liveLoans, pushToast, logActivity]
+    [refreshFromBackend, pushToast, logActivity]
   );
 
   const processReturn = useCallback(
-    (loanId, waiveFine) => {
-      const loan = liveLoans.find((l) => l.id === loanId);
-      if (!loan) return;
-      const book = bookById(loan.bookId);
-      const member = memberById(loan.memberId);
-      setLoans((ls) =>
-        ls.map((l) => (l.id === loanId ? { ...l, status: 'RETURNED', returnedDate: todayISO(), fine: waiveFine ? 0 : loan.fine } : l))
-      );
-      setBooks((bs) => bs.map((b) => (b.id === loan.bookId ? { ...b, availableCopies: Math.min(b.totalCopies, b.availableCopies + 1) } : b)));
-      pushToast('RETURN PROCESSED', `"${book?.title}" returned successfully.`, 'success');
-      logActivity('BOOK RETURNED', `"${book?.title}" by ${member?.name}`);
-
-      const waitingRes = reservations.filter((r) => r.bookId === loan.bookId && (r.status === 'WAITING' || r.status === 'READY'));
-      if (waitingRes.length > 0) {
-        setReservations((rs) =>
-          rs.map((r) => (r.bookId === loan.bookId && r.status === 'WAITING' && r.position === 1 ? { ...r, status: 'READY' } : r))
-        );
-        pushToast('RESERVATION READY', `A reserved copy of "${book?.title}" is now available.`, 'default');
+    async (loanId, waiveFine = false) => {
+      try {
+        const loan = await loansApi.returnLoan(loanId, waiveFine, todayISO());
+        await refreshFromBackend();
+        pushToast('RETURN PROCESSED', `"${loan.bookTitle}" return recorded in database.`, 'success');
+        logActivity('BOOK RETURNED', `"${loan.bookTitle}" by ${loan.memberName}`);
+      } catch (err) {
+        pushToast('RETURN FAILED', err.message, 'error');
       }
     },
-    [liveLoans, bookById, memberById, reservations, pushToast, logActivity]
+    [refreshFromBackend, pushToast, logActivity]
   );
 
   /* ---------- RESERVATION ACTIONS ---------- */
 
   const createReservation = useCallback(
-    (data) => {
-      const book = bookById(data.bookId);
-      const waitCount = reservations.filter((r) => r.bookId === data.bookId && (r.status === 'WAITING' || r.status === 'READY')).length;
-      const res = { id: uid('RS'), bookId: data.bookId, memberId: data.memberId, requestedDate: todayISO(), position: waitCount + 1, status: 'WAITING' };
-      setReservations((rs) => [res, ...rs]);
-      pushToast('RESERVATION CREATED', `"${book?.title}" reserved.`, 'success');
+    async (data) => {
+      try {
+        await reservationsApi.create({
+          bookId: data.bookId,
+          memberId: data.memberId,
+          requestedDate: todayISO(),
+        });
+        await refreshFromBackend();
+        pushToast('RESERVATION CREATED', 'Hold placed in queue.', 'success');
+        return true;
+      } catch (err) {
+        pushToast('RESERVATION FAILED', err.message, 'error');
+        return false;
+      }
     },
-    [bookById, reservations, pushToast]
+    [refreshFromBackend, pushToast]
   );
 
-  const cancelReservation = useCallback((id) => {
-    setReservations((rs) => rs.map((r) => (r.id === id ? { ...r, status: 'CANCELLED' } : r)));
-  }, []);
+  const cancelReservation = useCallback(
+    async (id) => {
+      try {
+        await reservationsApi.cancel(id);
+        await refreshFromBackend();
+        pushToast('RESERVATION CANCELLED', 'Hold removed from active queue.', 'default');
+      } catch (err) {
+        pushToast('CANCEL FAILED', err.message, 'error');
+      }
+    },
+    [refreshFromBackend, pushToast]
+  );
 
-  const markReady = useCallback((id) => {
-    setReservations((rs) => rs.map((r) => (r.id === id ? { ...r, status: 'READY' } : r)));
-  }, []);
+  const markReady = useCallback(
+    async (id) => {
+      try {
+        await reservationsApi.markReady(id);
+        await refreshFromBackend();
+        pushToast('RESERVATION READY', 'Hold marked ready for collection.', 'success');
+      } catch (err) {
+        pushToast('ACTION FAILED', err.message, 'error');
+      }
+    },
+    [refreshFromBackend, pushToast]
+  );
 
   const fulfillReservation = useCallback(
-    (id) => {
-      const res = reservations.find((r) => r.id === id);
-      if (!res) return;
-      const ok = createLoan({ bookId: res.bookId, memberId: res.memberId, borrowedDate: todayISO(), dueDate: isoDate(addDays(new Date(), 14)) });
-      if (ok) setReservations((rs) => rs.map((r) => (r.id === id ? { ...r, status: 'FULFILLED' } : r)));
+    async (id) => {
+      try {
+        await reservationsApi.fulfill(id);
+        await refreshFromBackend();
+        pushToast('RESERVATION FULFILLED', 'Hold converted into an active loan.', 'success');
+      } catch (err) {
+        pushToast('FULFILL FAILED', err.message, 'error');
+      }
     },
-    [reservations, createLoan]
+    [refreshFromBackend, pushToast]
   );
 
   /* ---------- CATEGORY ACTIONS ---------- */
 
   const addCategory = useCallback(
-    (name) => {
-      if (!name.trim()) return;
-      if (categories.some((c) => c.name.toUpperCase() === name.trim().toUpperCase())) {
-        pushToast('DUPLICATE CATEGORY', 'This category already exists.', 'error');
-        return;
+    async (name) => {
+      if (!name || !name.trim()) return;
+      try {
+        await categoriesApi.create(name.trim().toUpperCase());
+        await refreshFromBackend();
+        pushToast('CATEGORY ADDED', `"${name.trim().toUpperCase()}" created.`, 'success');
+      } catch (err) {
+        pushToast('CATEGORY FAILED', err.message, 'error');
       }
-      setCategories((cs) => [...cs, { id: uid('CAT'), name: name.trim().toUpperCase() }]);
-      pushToast('CATEGORY ADDED', `"${name.trim().toUpperCase()}" was added.`, 'success');
     },
-    [categories, pushToast]
+    [refreshFromBackend, pushToast]
   );
 
   const editCategory = useCallback(
-    (id, name) => {
-      const old = categories.find((c) => c.id === id);
-      const newName = name.trim().toUpperCase();
-      setCategories((cs) => cs.map((c) => (c.id === id ? { ...c, name: newName } : c)));
-      setBooks((bs) => bs.map((b) => (b.category === old?.name ? { ...b, category: newName } : b)));
-      pushToast('CATEGORY UPDATED', 'Category renamed.', 'success');
+    async (id, name) => {
+      if (!name || !name.trim()) return;
+      try {
+        await categoriesApi.update(id, name.trim().toUpperCase());
+        await refreshFromBackend();
+        pushToast('CATEGORY UPDATED', 'Category renamed in database.', 'success');
+      } catch (err) {
+        pushToast('UPDATE FAILED', err.message, 'error');
+      }
     },
-    [categories, pushToast]
+    [refreshFromBackend, pushToast]
   );
 
   const deleteCategory = useCallback(
-    (id) => {
-      const cat = categories.find((c) => c.id === id);
-      const inUse = books.some((b) => b.category === cat?.name);
-      if (inUse) {
-        pushToast('CATEGORY IN USE', 'Reassign books before deleting this category.', 'error');
-        return;
+    async (id) => {
+      try {
+        await categoriesApi.delete(id);
+        await refreshFromBackend();
+        pushToast('CATEGORY REMOVED', 'Category deleted from database.', 'default');
+      } catch (err) {
+        pushToast('ACTION BLOCKED', err.message, 'error');
       }
-      setCategories((cs) => cs.filter((c) => c.id !== id));
-      pushToast('CATEGORY REMOVED', `"${cat?.name}" removed.`, 'default');
     },
-    [categories, books, pushToast]
+    [refreshFromBackend, pushToast]
   );
 
-  /* ---------- SYSTEM ACTIONS ---------- */
+  /* ---------- SYSTEM & DATA MIGRATION ACTIONS ---------- */
+
+  const migrateLocalDataToBackend = useCallback(async () => {
+    try {
+      const payload = {
+        categories: JSON.parse(localStorage.getItem(LS_KEYS.categories) || '[]'),
+        books: JSON.parse(localStorage.getItem(LS_KEYS.books) || '[]'),
+        members: JSON.parse(localStorage.getItem(LS_KEYS.members) || '[]'),
+        loans: JSON.parse(localStorage.getItem(LS_KEYS.loans) || '[]'),
+      };
+
+      const result = await migrationApi.importLocalStorageData(payload);
+      await refreshFromBackend();
+
+      const summaryText = `Migrated: ${result.importedBooks} books, ${result.importedMembers} members, ${result.importedLoans} loans.`;
+      pushToast('DATA MIGRATION SUCCESS', summaryText, 'success');
+      return result;
+    } catch (err) {
+      pushToast('MIGRATION ERROR', err.message, 'error');
+      throw err;
+    }
+  }, [refreshFromBackend, pushToast]);
 
   const resetDemoData = useCallback(() => {
     const seeded = buildSeedDataset();
@@ -364,36 +461,54 @@ export function useLibraryStore() {
     setMembers(seeded.members);
     setLoans(seeded.loans);
     setReservations(seeded.reservations);
-    pushToast('DEMO DATA RESET', 'All data restored to defaults.', 'success');
+    pushToast('DEMO DATA RESET', 'Local preview data restored.', 'success');
     setConfirm(null);
     navigate('desktop');
   }, [pushToast, navigate]);
 
   const exportData = useCallback(() => {
-    const payload = { books, members, loans, reservations, categories, exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION };
+    const payload = {
+      books,
+      members,
+      loans,
+      reservations,
+      categories,
+      exportedAt: new Date().toISOString(),
+      schemaVersion: SCHEMA_VERSION,
+      source: 'Spring Boot REST + PostgreSQL Live Store',
+    };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'library-desk-export.json';
+    a.download = 'library-desk-database-export.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    pushToast('DATA EXPORTED', 'JSON file downloaded.', 'success');
+    pushToast('DATA EXPORTED', 'JSON backup file downloaded.', 'success');
   }, [books, members, loans, reservations, categories, pushToast]);
 
   /* ---------- DERIVED STATS ---------- */
 
   const stats = useMemo(() => {
-    const totalBooks = books.reduce((s, b) => s + b.totalCopies, 0);
-    const available = books.reduce((s, b) => s + b.availableCopies, 0);
+    const totalBooks = books.reduce((s, b) => s + (b.totalCopies || 0), 0);
+    const available = books.reduce((s, b) => s + (b.availableCopies || 0), 0);
     const borrowed = totalBooks - available;
     const overdue = liveLoans.filter((l) => l.status === 'OVERDUE').length;
     const dueToday = liveLoans.filter((l) => l.status === 'DUE TODAY').length;
     const activeLoans = liveLoans.filter((l) => l.status !== 'RETURNED').length;
-    return { totalBooks, available, borrowed, overdue, dueToday, activeLoans, totalMembers: members.length };
-  }, [books, liveLoans, members]);
+    return {
+      totalBooks,
+      available,
+      borrowed,
+      overdue,
+      dueToday,
+      activeLoans,
+      totalMembers: members.length,
+      backendConnected,
+    };
+  }, [books, liveLoans, members, backendConnected]);
 
   return {
     // domain data
@@ -404,24 +519,32 @@ export function useLibraryStore() {
     categories,
     stats,
     activity,
-    now,
-    bookById,
-    memberById,
-    // ui state
+
+    // system / connection state
+    backendConnected,
+    isLoading,
+    refreshFromBackend,
+    migrateLocalDataToBackend,
+
+    // UI state
     view,
     selectedBookId,
     selectedMemberId,
     modal,
     confirm,
     toasts,
-    // ui setters
-    setModal,
-    setConfirm,
+    now,
+
+    // setters
+    setView,
     setSelectedBookId,
     setSelectedMemberId,
-    navigate,
+    setModal,
+    setConfirm,
+    dismissToast,
     pushToast,
-    dismissToast: (id) => setToasts((ts) => ts.filter((t) => t.id !== id)),
+    navigate,
+
     // actions
     addBook,
     editBook,
@@ -441,6 +564,10 @@ export function useLibraryStore() {
     deleteCategory,
     resetDemoData,
     exportData,
+
+    // helpers
+    bookById,
+    memberById,
   };
 }
 

@@ -1,0 +1,32 @@
+flowchart TD
+    subgraph ClientTier ["Client Tier (Browser)"]
+        UI["React 18 SPA (Neo-Brutalist Desktop UI)"]
+        CTX["LibraryContext & useLibraryStore Hook"]
+        API_CLIENT["Central API Client Layer (Fetch / REST)"]
+        UI --> CTX
+        CTX --> API_CLIENT
+    end
+
+    subgraph ServerTier ["Server Tier (Spring Boot 3.3.5)"]
+        direction TB
+        CORS["CORS Filter & Security Boundary"]
+        CTRL["REST Controllers (@RestController)<br/>Book, Member, Category, Loan, Reservation, Dashboard, Report"]
+        SVC["Service & Business Logic Layer (@Service)<br/>Inventory Guards, Fine Rules, Concurrency Protection"]
+        REPO["Data Access Layer (@Repository)<br/>Spring Data JPA Repositories"]
+        
+        API_CLIENT -- "HTTPS / JSON REST API" --> CORS
+        CORS --> CTRL
+        CTRL --> SVC
+        SVC --> REPO
+    end
+
+    subgraph DataTier ["Persistence Tier (PostgreSQL 18)"]
+        direction TB
+        MIGR["Flyway Versioned Migrations (V1, V2)"]
+        DB[(PostgreSQL Relational Database)]
+        TABLES["Relational Tables:<br/>categories, books, members, loans, reservations"]
+        
+        REPO -- "HikariCP JDBC Connection Pool" --> DB
+        MIGR -. "Schema Versioning & DDL" .-> DB
+        DB --- TABLES
+    end

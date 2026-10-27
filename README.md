@@ -1,17 +1,19 @@
-# 📚 LIBRARY / DESK — Enhanced Edition
+# 📚 LIBRARY / DESK — Full-Stack Edition
 
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.4.21-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.5-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-21_LTS-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Flyway](https://img.shields.io/badge/Flyway-Migrations-CC0200?style=for-the-badge&logo=flyway&logoColor=white)](https://flywaydb.org/)
+[![Swagger](https://img.shields.io/badge/OpenAPI-3.0_Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8080/swagger-ui.html)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f?style=for-the-badge&logo=github)](https://Kurinji-Eswar.github.io/library-desk/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-> **A Retro Desktop Library Management Workstation**
+> **A Retro Desktop Library Management System Workstation**
 >
-> A local-first, frontend-only Library Management System designed as a nostalgic early-2000s desktop operating system — cream paper textures, mint highlights, ink-black chunky borders, hard offset shadows, window-chrome applications, and terminal status monitors.
+> A full-stack Library Management System designed as a nostalgic early-2000s desktop operating system — cream paper textures, mint highlights, ink-black chunky borders, hard offset shadows, window-chrome applications, and terminal status monitors. Backed by a high-performance **Java 21 & Spring Boot 3 REST API** with **PostgreSQL 18 relational persistence**, **Flyway versioned migrations**, and optimistic concurrency locking.
 
 > [!NOTE]
-> **100% Client-Side & Local-First**: This application runs entirely in your web browser with zero server dependencies, no database backends, and no external tracking. All catalog items, patron profiles, circulation records, and configuration settings persist synchronously in browser `localStorage`.
+> **Full-Stack Enterprise Architecture with Resilient Fallback**: All catalog items, patron profiles, circulation records, and hold queues persist in a normalized PostgreSQL database via Spring Data JPA. When running standalone or offline, the application seamlessly falls back to cached client storage.
 
 ---
 

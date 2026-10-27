@@ -21,3 +21,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.log
+
+# Backend Build & Maven
+backend/target/
+backend/.mvn/
+.m2/

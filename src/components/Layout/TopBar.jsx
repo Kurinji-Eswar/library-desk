@@ -25,7 +25,7 @@ const MENU_CONTENTS = {
 };
 
 function TopBar() {
-  const { navigate, books, members, loans, now, setSelectedBookId, setSelectedMemberId } = useLibrary();
+  const { navigate, books, members, loans, now, setSelectedBookId, setSelectedMemberId, backendConnected } = useLibrary();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
@@ -171,9 +171,9 @@ function TopBar() {
           <span className="text-ink">{fmtTime(now)}</span>
         </div>
         <div className="hidden lg:flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-widest shrink-0">
-          <span className="text-grayish">LOCAL MODE</span>
-          <span className="w-2 h-2 rounded-full bg-mint border border-ink blinker"></span>
-          <span>READY</span>
+          <span className="text-grayish">{backendConnected ? 'SPRING BOOT + POSTGRESQL' : 'STANDALONE CACHE'}</span>
+          <span className={`w-2 h-2 rounded-full border border-ink ${backendConnected ? 'bg-mint blinker' : 'bg-gold'}`}></span>
+          <span>{backendConnected ? 'ONLINE' : 'OFFLINE'}</span>
         </div>
       </div>
     </header>

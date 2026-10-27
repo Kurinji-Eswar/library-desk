@@ -2,7 +2,7 @@
   "name": "library-desk",
   "private": true,
   "version": "1.0.0",
-  "description": "LIBRARY / DESK — a retro desktop-style Library Management System (frontend-only, localStorage).",
+  "description": "LIBRARY / DESK — Full-Stack Library Management System workstation with React, Spring Boot 3 & PostgreSQL.",
   "homepage": "https://Kurinji-Eswar.github.io/library-desk",
   "type": "module",
   "scripts": {
@@ -11,6 +11,9 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
+    "backend:build": "mvn -f backend/pom.xml clean package -DskipTests=true",
+    "backend:test": "mvn -f backend/pom.xml test",
+    "backend:start": "java -jar backend/target/library-desk-backend-1.0.0.jar",
     "lint": "eslint src --ext .js,.jsx"
   },
   "dependencies": {
